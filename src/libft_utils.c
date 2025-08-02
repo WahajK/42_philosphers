@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/28 19:11:51 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/07/23 22:59:38 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/02 19:34:12 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,10 @@ static int	ft_isspace(char c)
 	return (c == ' ' || (c >= 9 && c <= 13));
 }
 
-int	ft_atoi(const char *str)
+long	ft_atol(const char *str)
 {
-	int	result;
-	int	sign;
+	long	result;
+	long	sign;
 
 	result = 0;
 	sign = 1;
@@ -34,4 +34,3 @@ int	ft_atoi(const char *str)
 		result = result * 10 + (*str++ - '0');
 	return (result * sign);
 }
-

@@ -1,6 +1,6 @@
 NAME = philosphers
 
-SRCS = src/main.c
+SRCS = src/main.c src/libft_utils.c
 OBJS = $(SRCS:.c=.o)
 
 CC = cc
