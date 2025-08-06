@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/02 20:27:51 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/06 20:05:19 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,19 +15,25 @@
 # include <stdio.h>
 # include <time.h>
 # include <sys/time.h>
+# include <stdlib.h>
 # include <pthread.h>
 
 # define USAGE_MSG "Usage: ./philosphers number_of_philosophers time_to_die \
 time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]\n"
-
+# define INVALID_ARG_MSG "Please enter valid only valid positive numbers\n"
+# define ZERO_PHILO_MSG "Number of philosphers must be greater than 1\n"
 typedef pthread_mutex_t	t_mutex;
 typedef struct s_vars
 {
-	long	num_philo;
-	long	ttd;
-	long	tte;
-	long	tts;
-	long	eat_num;
+	int				num_philo;
+	long			time_to_die;
+	long			time_to_eat;
+	long			time_to_sleep;
+	int				eat_num;
+	pthread_mutex_t	*forks;
+	pthread_mutex_t	*left_fork;
+	pthread_mutex_t	*right_fork;
+	t_philospher	*philosphers;
 }	t_vars;
 
 typedef struct s_philospher
