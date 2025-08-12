@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/06 20:18:03 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/12 18:22:45 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,8 +57,20 @@ int	validate_arguments(int argc, char *argv[], t_vars *vars)
 
 int	init_values(t_vars *vars)
 {
+	int	i;
+
 	vars->philosphers = malloc(sizeof(t_philospher) * vars->num_philo);
-	vars->forks = malloc(sizeof)
+	vars->chopsticks = malloc(sizeof(t_mutex) * vars->num_philo);
+	if (!vars->philosphers || !vars->chopsticks)
+		return (1);
+	i = -1;
+	while (++i < vars->philosphers)
+		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0)
+			return (printf(PTHREAD_FAILURE), 1);
+	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0)
+		return (printf(PTHREAD_FAILURE), 1);
+	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0)
+		return (printf(PTHREAD_FAILURE), 1);
 }
 
 int	main(int argc, char *argv[])
