@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/12 18:27:43 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/12 18:29:51 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,6 @@ typedef struct s_philospher
 {
 	t_mutex	*left_chopstick;
 	t_mutex	*right_chopstick;
-	int		test;
 }	t_philospher;
 
 typedef struct s_vars
