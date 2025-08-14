@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/12 18:22:45 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/14 16:16:34 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,11 +66,10 @@ int	init_values(t_vars *vars)
 	i = -1;
 	while (++i < vars->philosphers)
 		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0)
-			return (printf(PTHREAD_FAILURE), 1);
-	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0)
-		return (printf(PTHREAD_FAILURE), 1);
-	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0)
-		return (printf(PTHREAD_FAILURE), 1);
+			return (printf(MUTEX_FAILURE), 1);
+	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0
+		|| pthread_mutex_init(&vars->death_mutex, NULL) != 0)
+		return (printf(MUTEX_FAILURE), 1);
 }
 
 int	main(int argc, char *argv[])

@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/12 18:29:51 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/14 16:15:25 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ Example: ./philosphers 5 800 200 200 7\n"
 # define INVALID_ARG_MSG "Please enter valid only valid positive numbers\n"
 # define ZERO_PHILO_MSG "Number of philosphers must be greater than 1\n"
 # define PTHREAD_FAILURE "Failed to initialize threads\n"
+# define MUTEX_FAILURE "Failed to initialize mutex\n"
 
 /******************************************************************************
 *                                    Data Structures                          *
@@ -52,6 +53,7 @@ typedef struct s_vars
 	t_mutex			*left_chopstick;
 	t_mutex			*right_chopstick;
 	t_mutex			print_mutex;
+	t_mutex			death_mutex;
 	t_philospher	*philosphers;
 }	t_vars;
 
