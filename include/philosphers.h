@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/08/14 16:15:25 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/08/21 21:08:24 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,10 @@ typedef pthread_mutex_t	t_mutex;
 
 typedef struct s_philospher
 {
+	int		id;
+	int		last_ate_time;
+	int		num_eaten;
+	t_state	current_state;
 	t_mutex	*left_chopstick;
 	t_mutex	*right_chopstick;
 }	t_philospher;
@@ -45,13 +49,12 @@ typedef struct s_philospher
 typedef struct s_vars
 {
 	int				num_philo;
+	int				eat_num;
 	long			time_to_die;
 	long			time_to_eat;
 	long			time_to_sleep;
-	int				eat_num;
+	long			start_time;
 	t_mutex			*chopsticks;
-	t_mutex			*left_chopstick;
-	t_mutex			*right_chopstick;
 	t_mutex			print_mutex;
 	t_mutex			death_mutex;
 	t_philospher	*philosphers;
