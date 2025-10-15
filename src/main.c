@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/15 18:57:19 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/15 20:32:23 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,13 +54,31 @@ int	simulation_ended(t_vars *vars)
 void	*check_death(void *args)
 {
 	t_vars *vars;
+	int		i;
 
 	vars = (t_vars *) args;
 	while (!simulation_ended(vars))
 	{
-		continue;
+
 	}
 	return (NULL);
+}
+
+int	is_philo_dead(t_philospher *philo)
+{
+	long	last_ate_time;
+
+	pthread_mutex_lock(&philo->last_meal_mutex);
+	last_ate_time = philo->last_ate_time;
+	pthread_mutex_unlock(&philo->last_meal_mutex);
+	return (get_current_time() - last_ate_time >= philo->vars->time_to_die);
+}
+
+int	check_num_eaten(t_philospher *philo)
+{
+	if (philo->vars->eat_num == -1)
+		return (0);
+	return (philo->num_eaten >= philo->vars->eat_num);
 }
 
 void	print_status(t_philospher *philo, char *msg)
@@ -150,9 +168,13 @@ int	essen(t_philospher *philo)
 {
 	philo->current_state = EATING;
 	pthread_mutex_lock(philo->right_chopstick);
+	print_status(philo, "has taken a chopstick");
 	pthread_mutex_lock(philo->left_chopstick);
+	print_status(philo, "has taken a chopstick");
+	philo->last_ate_time = get_current_time() - philo->vars->start_time;
 	print_status(philo, "is eating");
 	usleep(philo->vars->time_to_eat * 1000);
+	philo->num_eaten++;
 	pthread_mutex_unlock(philo->right_chopstick);
 	pthread_mutex_unlock(philo->left_chopstick);
 	return (SUCCESS);

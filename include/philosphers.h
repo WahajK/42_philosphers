@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/15 17:11:38 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/15 19:15:42 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,12 +73,13 @@ typedef struct s_vars t_vars;
 typedef struct s_philospher
 {
 	int			id;
-	int			last_ate_time;
 	int			num_eaten;
+	long		last_ate_time;
 	t_thread	thread;
 	t_state		current_state;
 	t_mutex		*left_chopstick;
 	t_mutex		*right_chopstick;
+	t_mutex		last_meal_mutex;
 	t_vars		*vars;
 }	t_philospher;
 
