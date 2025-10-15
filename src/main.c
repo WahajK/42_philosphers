@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/15 18:19:41 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/15 18:57:19 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,6 +162,7 @@ int	schlafen(t_philospher *philo)
 {
 	philo->current_state = SLEEPING;
 	print_status(philo, "is sleeping");
+	usleep(philo->vars->time_to_sleep * 1000);
 	return (SUCCESS);
 }
 
@@ -179,12 +180,15 @@ void	*philo_routine(void *args)
 	philo = (t_philospher *)args;
 	if (philo->id % 2 == 0)
 		usleep(5);
-	if (essen(philo))
-		return (NULL);
-	if (schlafen(philo))
-		return (NULL);
-	if (denken(philo))
-		return (NULL);
+	while (!simulation_ended(philo->vars))
+	{
+		if (essen(philo))
+			return (NULL);
+		if (schlafen(philo))
+			return (NULL);
+		if (denken(philo))
+			return (NULL);
+	}
 	return (NULL);
 }
 
