@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/03 20:25:59 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/15 17:11:38 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ typedef enum e_status
 
 typedef pthread_mutex_t	t_mutex;
 typedef pthread_t	t_thread;
+typedef struct s_philospher t_philospher;
+typedef struct s_vars t_vars;
 
 typedef struct s_philospher
 {
@@ -77,6 +79,7 @@ typedef struct s_philospher
 	t_state		current_state;
 	t_mutex		*left_chopstick;
 	t_mutex		*right_chopstick;
+	t_vars		*vars;
 }	t_philospher;
 
 typedef struct s_vars
@@ -92,7 +95,7 @@ typedef struct s_vars
 	t_mutex			*chopsticks;
 	t_mutex			print_mutex;
 	t_mutex			death_mutex;
-	t_thread		*monitor;		
+	t_thread		monitor;
 	t_philospher	*philosphers;
 }	t_vars;
 
@@ -101,6 +104,7 @@ typedef struct s_vars
 ******************************************************************************/
 
 long	ft_atol(const char *str);
+long	get_current_time(void);
 void	ft_bzero(void *s, size_t n);
 void	*ft_calloc(size_t count, size_t size);
 #endif

@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/12 23:34:39 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/15 18:19:41 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,61 +46,36 @@ int	simulation_ended(t_vars *vars)
 	int	ended;
 
 	pthread_mutex_lock(&vars->death_mutex);
-	ended = vars->death_flag || vars->all_eaten;
+	ended = vars->death_flag;
 	pthread_mutex_unlock(&vars->death_mutex);
 	return (ended);
 }
 
-int	check_death(t_vars *vars)
+void	*check_death(void *args)
 {
-	pthread_mutex_lock(&vars->death_mutex);
-	if (vars->death_flag || vars->all_eaten)
-		return (pthread_mutex_unlock(&vars->death_mutex), 1);
-	return (pthread_mutex_unlock(&vars->death_mutex), 0);
+	t_vars *vars;
+
+	vars = (t_vars *) args;
+	while (!simulation_ended(vars))
+	{
+		continue;
+	}
+	return (NULL);
 }
 
-int	eat(void)
+void	print_status(t_philospher *philo, char *msg)
 {
-	return (SUCCESS);
+	long	timestamp;
+
+	pthread_mutex_lock(&philo->vars->print_mutex);
+	if (!simulation_ended(philo->vars))
+	{
+		timestamp = get_current_time() - philo->vars->start_time;
+		printf("%s%ld %s%d %s%s\n",
+			CYAN, timestamp, BOLD, philo->id, msg, RESET);
+	}
+	pthread_mutex_unlock(&philo->vars->print_mutex);
 }
-
-int	sleep_(void)
-{
-	return (SUCCESS);
-}
-
-int	think(t_vars *vars)
-{
-	if (check_death(vars))
-		return (FAILURE);
-	return (SUCCESS);
-}
-
-// void	print_status(t_vars *vars, char *msg)
-// {
-// 	long	timestamp;
-
-// 	pthread_mutex_lock(&vars->print_mutex);
-// 	if (simulation_ended(vars))
-// 	{
-// 	}
-// }
-
-// void	philo_routine(void *vars)
-// {
-// 	t_vars *philo;
-
-// 	philo = (t_vars *) vars;
-// 	while (simulation_ended(&vars) != 1)
-// 	{
-// 		if (eat())
-// 			return (NULL);
-// 		if (sleep())
-// 			return (NULL);
-// 		if (think())
-// 			return (NULL);
-// 	}
-// }
 
 int	validate_arguments(int argc, char *argv[], t_vars *vars)
 {
@@ -133,6 +108,7 @@ void	set_chopsticks(t_vars *vars)
 			vars->philosphers[i].right_chopstick = &vars->chopsticks[i];
 			vars->philosphers[i].left_chopstick = &vars->chopsticks[i + 1];
 		}
+		i++;
 	}
 }
 
@@ -142,38 +118,74 @@ int	init_values(t_vars *vars)
 
 	vars->philosphers = ft_calloc(sizeof(t_philospher), vars->num_philo);
 	vars->chopsticks = malloc(sizeof(t_mutex) * vars->num_philo);
+	vars->start_time = get_current_time();
 	if (!vars->philosphers || !vars->chopsticks)
 		return (FAILURE);
+	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0
+		|| pthread_mutex_init(&vars->death_mutex, NULL) != 0)
+		return (printf(MUTEX_FAILURE), FAILURE);
 	i = -1;
 	while (++i < vars->num_philo)
 	{
+		vars->philosphers[i].vars = vars;
 		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0)
 			return (printf(MUTEX_FAILURE), FAILURE);
 		vars->philosphers[i].id = i;
 	}
-	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0
-		|| pthread_mutex_init(&vars->death_mutex, NULL) != 0)
-		return (printf(MUTEX_FAILURE), FAILURE);
+	set_chopsticks(vars);
 	return (SUCCESS);
+}
+
+long	get_current_time(void)
+{
+	struct timeval	tv;
+	long			current_time;
+
+	gettimeofday(&tv, NULL);
+	current_time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	return (current_time);
 }
 
 int	essen(t_philospher *philo)
 {
+	philo->current_state = EATING;
+	pthread_mutex_lock(philo->right_chopstick);
+	pthread_mutex_lock(philo->left_chopstick);
+	print_status(philo, "is eating");
+	usleep(philo->vars->time_to_eat * 1000);
+	pthread_mutex_unlock(philo->right_chopstick);
+	pthread_mutex_unlock(philo->left_chopstick);
+	return (SUCCESS);
+}
 
+int	schlafen(t_philospher *philo)
+{
+	philo->current_state = SLEEPING;
+	print_status(philo, "is sleeping");
+	return (SUCCESS);
+}
+
+int	denken(t_philospher *philo)
+{
+	philo->current_state = THINKING;
+	print_status(philo, "is thinking");
+	return (SUCCESS);
 }
 
 void	*philo_routine(void *args)
 {
-	t_philospher *philo = (t_philospher *)args;
-	printf("Pihlo ID: %d\n", philo->id);
+	t_philospher	*philo;
+
+	philo = (t_philospher *)args;
 	if (philo->id % 2 == 0)
 		usleep(5);
 	if (essen(philo))
 		return (NULL);
-	if (schlafen())
+	if (schlafen(philo))
 		return (NULL);
-	if (denken())
+	if (denken(philo))
 		return (NULL);
+	return (NULL);
 }
 
 int	start_simulation(t_vars *vars)
@@ -187,12 +199,13 @@ int	start_simulation(t_vars *vars)
 	{
 		if (pthread_create(&vars->philosphers[i].thread, NULL, philo_routine, \
 		&vars->philosphers[i]) != 0)
-		return (printf(PTHREAD_FAILURE), FAILURE);
+			return (printf(PTHREAD_FAILURE), FAILURE);
 	}
 	i = -1;
 	while (++i < vars->num_philo)
-		if (pthread_join(vars->philosphers->thread, NULL) != 0)
+		if (pthread_join(vars->philosphers[i].thread, NULL) != 0)
 			return (printf(PTHREAD_JOIN_FAILURE), FAILURE);
+	return (SUCCESS);
 }
 
 int	main(int argc, char *argv[])
