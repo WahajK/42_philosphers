@@ -60,5 +60,4 @@ int main(void)
     printf("After: %d\n", value);
 
     pthread_mutex_destroy(&lock);
-    return 0;
 }

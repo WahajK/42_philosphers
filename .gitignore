@@ -1,4 +1,5 @@
 *.o
 *.out
 .vscode
+test.c
 philosphers
