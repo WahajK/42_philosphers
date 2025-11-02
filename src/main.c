@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:47:04 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/15 20:32:23 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/21 13:09:10 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,15 +51,35 @@ int	simulation_ended(t_vars *vars)
 	return (ended);
 }
 
-void	*check_death(void *args)
+void	philosphers_janaza(t_vars *vars, int i)
 {
-	t_vars *vars;
+	print_status(&vars->philosphers[i], "has died");
+}
+
+void	*monitor_routine(void *args)
+{
+	t_vars	*vars;
 	int		i;
+	int		count;
 
 	vars = (t_vars *) args;
-	while (!simulation_ended(vars))
+	while (!vars->all_eaten && !vars->death_flag)
 	{
-
+		i = -1;
+		count = 0;
+		while (++i < vars->num_philo)
+		{
+			if (is_philo_dead(&vars->philosphers[i]))
+			{
+				philosphers_janaza(vars, i);
+				vars->death_flag = 1;
+				break ;
+			}
+			if (check_all_eaten(&vars->philosphers[i]))
+				count++;
+		}
+		if (count == vars->num_philo)
+			vars->all_eaten = 1;
 	}
 	return (NULL);
 }
@@ -74,7 +94,7 @@ int	is_philo_dead(t_philospher *philo)
 	return (get_current_time() - last_ate_time >= philo->vars->time_to_die);
 }
 
-int	check_num_eaten(t_philospher *philo)
+int	check_all_eaten(t_philospher *philo)
 {
 	if (philo->vars->eat_num == -1)
 		return (0);
@@ -112,21 +132,22 @@ int	validate_arguments(int argc, char *argv[], t_vars *vars)
 void	set_chopsticks(t_vars *vars)
 {
 	int	i;
+	int	next;
 
-	i = 0;
-	while (i < vars->num_philo)
+	i = -1;
+	while (++i < vars->num_philo)
 	{
-		if (i == vars->num_philo - 1)
+		next = (i + 1) % vars->num_philo;
+		if (i % 2 == 0)
 		{
 			vars->philosphers[i].right_chopstick = &vars->chopsticks[i];
-			vars->philosphers[i].left_chopstick = &vars->chopsticks[0];
+			vars->philosphers[i].left_chopstick = &vars->chopsticks[next];
 		}
 		else
 		{
-			vars->philosphers[i].right_chopstick = &vars->chopsticks[i];
-			vars->philosphers[i].left_chopstick = &vars->chopsticks[i + 1];
+			vars->philosphers[i].right_chopstick = &vars->chopsticks[next];
+			vars->philosphers[i].left_chopstick = &vars->chopsticks[i];
 		}
-		i++;
 	}
 }
 
@@ -134,11 +155,11 @@ int	init_values(t_vars *vars)
 {
 	int	i;
 
-	vars->philosphers = ft_calloc(sizeof(t_philospher), vars->num_philo);
+	vars->philosphers = ft_calloc(vars->num_philo, sizeof(t_philospher));
 	vars->chopsticks = malloc(sizeof(t_mutex) * vars->num_philo);
-	vars->start_time = get_current_time();
 	if (!vars->philosphers || !vars->chopsticks)
 		return (FAILURE);
+	vars->start_time = get_current_time();
 	if (pthread_mutex_init(&vars->print_mutex, NULL) != 0
 		|| pthread_mutex_init(&vars->death_mutex, NULL) != 0)
 		return (printf(MUTEX_FAILURE), FAILURE);
@@ -146,7 +167,9 @@ int	init_values(t_vars *vars)
 	while (++i < vars->num_philo)
 	{
 		vars->philosphers[i].vars = vars;
-		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0)
+		vars->philosphers[i].last_ate_time = vars->start_time;
+		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0 \
+	|| pthread_mutex_init(&vars->philosphers[i].last_meal_mutex, NULL) != 0)
 			return (printf(MUTEX_FAILURE), FAILURE);
 		vars->philosphers[i].id = i;
 	}
@@ -164,16 +187,31 @@ long	get_current_time(void)
 	return (current_time);
 }
 
+void	set_last_ate_time(t_philospher *philo)
+{
+	pthread_mutex_lock(&philo->last_meal_mutex);
+	philo->last_ate_time = get_current_time();
+	pthread_mutex_unlock(&philo->last_meal_mutex);
+}
+
 int	essen(t_philospher *philo)
 {
+	if (philo->num_eaten == philo->vars->eat_num)
+		return (1);
 	philo->current_state = EATING;
-	pthread_mutex_lock(philo->right_chopstick);
-	print_status(philo, "has taken a chopstick");
-	pthread_mutex_lock(philo->left_chopstick);
-	print_status(philo, "has taken a chopstick");
-	philo->last_ate_time = get_current_time() - philo->vars->start_time;
+	if (philo->id % 2 == 0)
+	{
+		pthread_mutex_lock(philo->right_chopstick);
+		pthread_mutex_lock(philo->left_chopstick);
+	}
+	else
+	{
+		pthread_mutex_lock(philo->left_chopstick);
+		pthread_mutex_lock(philo->right_chopstick);
+	}
 	print_status(philo, "is eating");
 	usleep(philo->vars->time_to_eat * 1000);
+	set_last_ate_time(philo);
 	philo->num_eaten++;
 	pthread_mutex_unlock(philo->right_chopstick);
 	pthread_mutex_unlock(philo->left_chopstick);
@@ -201,7 +239,7 @@ void	*philo_routine(void *args)
 
 	philo = (t_philospher *)args;
 	if (philo->id % 2 == 0)
-		usleep(5);
+		usleep(1000);
 	while (!simulation_ended(philo->vars))
 	{
 		if (essen(philo))
@@ -219,18 +257,19 @@ int	start_simulation(t_vars *vars)
 	int	i;
 
 	i = -1;
-	if (pthread_create(&vars->monitor, NULL, check_death, vars) != 0)
-		return (printf(PTHREAD_FAILURE), FAILURE);
 	while (++i < vars->num_philo)
 	{
 		if (pthread_create(&vars->philosphers[i].thread, NULL, philo_routine, \
 		&vars->philosphers[i]) != 0)
 			return (printf(PTHREAD_FAILURE), FAILURE);
 	}
+	if (pthread_create(&vars->monitor, NULL, monitor_routine, vars) != 0)
+		return (printf(PTHREAD_FAILURE), FAILURE);
 	i = -1;
 	while (++i < vars->num_philo)
 		if (pthread_join(vars->philosphers[i].thread, NULL) != 0)
 			return (printf(PTHREAD_JOIN_FAILURE), FAILURE);
+	pthread_join(vars->monitor, NULL);
 	return (SUCCESS);
 }
 

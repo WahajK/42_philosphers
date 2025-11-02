@@ -6,7 +6,7 @@
 /*   By: muhakhan <muhakhan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 20:48:05 by muhakhan          #+#    #+#             */
-/*   Updated: 2025/10/15 19:15:42 by muhakhan         ###   ########.fr       */
+/*   Updated: 2025/10/19 22:02:49 by muhakhan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 # define USAGE_MSG "Usage: ./philosphers number_of_philosophers time_to_die \
 time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]\n\
 Example: ./philosphers 5 800 200 200 7\n"
-# define INVALID_ARG_MSG "Please enter valid only valid positive numbers\n"
+# define INVALID_ARG_MSG "Please enter valid only valid positive numbers invalid\n"
 # define ZERO_PHILO_MSG "Number of philosphers must be greater than 1\n"
 # define PTHREAD_FAILURE "Failed to initialize threads\n"
 # define MUTEX_FAILURE "Failed to initialize mutex\n"
@@ -65,10 +65,10 @@ typedef enum e_status
 *                                    Data Structures                          *
 ******************************************************************************/
 
-typedef pthread_mutex_t	t_mutex;
-typedef pthread_t	t_thread;
-typedef struct s_philospher t_philospher;
-typedef struct s_vars t_vars;
+typedef pthread_mutex_t		t_mutex;
+typedef pthread_t			t_thread;
+typedef struct s_philospher	t_philospher;
+typedef struct s_vars		t_vars;
 
 typedef struct s_philospher
 {
@@ -104,8 +104,11 @@ typedef struct s_vars
 *                           Function Prototypes                               *
 ******************************************************************************/
 
+int		check_all_eaten(t_philospher *philo);
+int		is_philo_dead(t_philospher *philo);
 long	ft_atol(const char *str);
 long	get_current_time(void);
 void	ft_bzero(void *s, size_t n);
 void	*ft_calloc(size_t count, size_t size);
+void	print_status(t_philospher *philo, char *msg);
 #endif
