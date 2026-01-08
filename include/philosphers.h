@@ -24,10 +24,11 @@
 *                                     Macros                                  *
 ******************************************************************************/
 
-# define USAGE_MSG "Usage: ./philosphers number_of_philosophers time_to_die \
+# define USAGE_MSG "Usage: ./philo number_of_philosophers time_to_die \
 time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]\n\
-Example: ./philosphers 5 800 200 200 7\n"
-# define INVALID_ARG_MSG "Please enter valid only valid positive numbers invalid\n"
+Example: ./philo 5 800 200 200 7\n"
+# define INVALID_ARG_MSG "Please enter valid only valid positive numbers \
+invalid\n"
 # define ZERO_PHILO_MSG "Number of philosphers must be greater than 1\n"
 # define PTHREAD_FAILURE "Failed to initialize threads\n"
 # define MUTEX_FAILURE "Failed to initialize mutex\n"

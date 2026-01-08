@@ -1,10 +1,10 @@
-NAME = philosphers
+NAME = philo
 
 SRCS = src/main.c src/libft_utils.c
 OBJS = $(SRCS:.c=.o)
 
 CC = cc
-CFLAGS = -g -pthread #-Wall -Wextra -Werror
+CFLAGS = -g -pthread -Wall -Wextra -Werror
 
 all: $(NAME)
 

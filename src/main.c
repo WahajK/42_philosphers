@@ -26,6 +26,55 @@ int	ft_nan(char *num)
 	return (SUCCESS);
 }
 
+void	free_philosophers(t_vars *vars)
+{
+	int	i;
+
+	if (vars->philosphers)
+	{
+		i = 0;
+		while (i < vars->num_philo)
+		{
+			pthread_mutex_destroy(&vars->philosphers[i].last_meal_mutex);
+			i++;
+		}
+		free(vars->philosphers);
+		vars->philosphers = NULL;
+	}
+}
+
+void	free_chopsticks(t_vars *vars)
+{
+	int	i;
+
+	if (vars->chopsticks)
+	{
+		i = 0;
+		while (i < vars->num_philo)
+		{
+			pthread_mutex_destroy(&vars->chopsticks[i]);
+			i++;
+		}
+		free(vars->chopsticks);
+		vars->chopsticks = NULL;
+	}
+}
+
+void	free_mutexes(t_vars *vars)
+{
+	if (&vars->print_mutex)
+		pthread_mutex_destroy(&vars->print_mutex);
+	if (&vars->death_mutex)
+		pthread_mutex_destroy(&vars->death_mutex);
+}
+
+void	free_resources(t_vars *vars)
+{
+	free_philosophers(vars);
+	free_chopsticks(vars);
+	free_mutexes(vars);
+}
+
 void	parse_data(int argc, char *argv[], t_vars *vars)
 {
 	int	i;
@@ -169,7 +218,7 @@ int	init_values(t_vars *vars)
 		vars->philosphers[i].vars = vars;
 		vars->philosphers[i].last_ate_time = vars->start_time;
 		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0 \
-	|| pthread_mutex_init(&vars->philosphers[i].last_meal_mutex, NULL) != 0)
+|| pthread_mutex_init(&vars->philosphers[i].last_meal_mutex, NULL) != 0)
 			return (printf(MUTEX_FAILURE), FAILURE);
 		vars->philosphers[i].id = i;
 	}
@@ -260,7 +309,7 @@ int	start_simulation(t_vars *vars)
 	while (++i < vars->num_philo)
 	{
 		if (pthread_create(&vars->philosphers[i].thread, NULL, philo_routine, \
-		&vars->philosphers[i]) != 0)
+&vars->philosphers[i]) != 0)
 			return (printf(PTHREAD_FAILURE), FAILURE);
 	}
 	if (pthread_create(&vars->monitor, NULL, monitor_routine, vars) != 0)
@@ -283,11 +332,11 @@ int	main(int argc, char *argv[])
 		if (validate_arguments(argc, argv, &vars))
 			return (FAILURE);
 		if (init_values(&vars))
-			return (FAILURE);
+			return (free_resources(&vars), FAILURE);
 		if (start_simulation(&vars))
-			return (FAILURE);
+			return (free_resources(&vars), FAILURE);
 	}
 	else
 		return (printf(USAGE_MSG), FAILURE);
-	return (SUCCESS);
+	return (free_resources(&vars), SUCCESS);
 }
