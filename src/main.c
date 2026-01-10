@@ -102,7 +102,16 @@ int	simulation_ended(t_vars *vars)
 
 void	philosphers_janaza(t_vars *vars, int i)
 {
-	print_status(&vars->philosphers[i], "has died");
+	long	timestamp;
+
+	pthread_mutex_lock(&vars->death_mutex);
+	vars->death_flag = 1;
+	pthread_mutex_unlock(&vars->death_mutex);
+	pthread_mutex_lock(&vars->print_mutex);
+	timestamp = get_current_time() - vars->start_time;
+	printf("%s%ld %s%d %shas died%s\n",
+		CYAN, timestamp, BOLD, vars->philosphers[i].id, "", RESET);
+	pthread_mutex_unlock(&vars->print_mutex);
 }
 
 void	*monitor_routine(void *args)
@@ -112,7 +121,7 @@ void	*monitor_routine(void *args)
 	int		count;
 
 	vars = (t_vars *) args;
-	while (!vars->all_eaten && !vars->death_flag)
+	while (!simulation_ended(vars))
 	{
 		i = -1;
 		count = 0;
@@ -121,14 +130,19 @@ void	*monitor_routine(void *args)
 			if (is_philo_dead(&vars->philosphers[i]))
 			{
 				philosphers_janaza(vars, i);
-				vars->death_flag = 1;
 				break ;
 			}
 			if (check_all_eaten(&vars->philosphers[i]))
 				count++;
 		}
 		if (count == vars->num_philo)
+		{
+			pthread_mutex_lock(&vars->death_mutex);
 			vars->all_eaten = 1;
+			vars->death_flag = 1;
+			pthread_mutex_unlock(&vars->death_mutex);
+		}
+		usleep(1000);
 	}
 	return (NULL);
 }
@@ -145,9 +159,14 @@ int	is_philo_dead(t_philospher *philo)
 
 int	check_all_eaten(t_philospher *philo)
 {
+	int	num_eaten;
+
 	if (philo->vars->eat_num == -1)
 		return (0);
-	return (philo->num_eaten >= philo->vars->eat_num);
+	pthread_mutex_lock(&philo->last_meal_mutex);
+	num_eaten = philo->num_eaten;
+	pthread_mutex_unlock(&philo->last_meal_mutex);
+	return (num_eaten >= philo->vars->eat_num);
 }
 
 void	print_status(t_philospher *philo, char *msg)
@@ -220,7 +239,7 @@ int	init_values(t_vars *vars)
 		if (pthread_mutex_init(&vars->chopsticks[i], NULL) != 0 \
 || pthread_mutex_init(&vars->philosphers[i].last_meal_mutex, NULL) != 0)
 			return (printf(MUTEX_FAILURE), FAILURE);
-		vars->philosphers[i].id = i;
+		vars->philosphers[i].id = i + 1;
 	}
 	set_chopsticks(vars);
 	return (SUCCESS);
@@ -245,23 +264,37 @@ void	set_last_ate_time(t_philospher *philo)
 
 int	essen(t_philospher *philo)
 {
-	if (philo->num_eaten == philo->vars->eat_num)
-		return (1);
+	int	num_eaten;
+
+	if (philo->vars->eat_num != -1)
+	{
+		pthread_mutex_lock(&philo->last_meal_mutex);
+		num_eaten = philo->num_eaten;
+		pthread_mutex_unlock(&philo->last_meal_mutex);
+		if (num_eaten >= philo->vars->eat_num)
+			return (1);
+	}
 	philo->current_state = EATING;
 	if (philo->id % 2 == 0)
 	{
 		pthread_mutex_lock(philo->right_chopstick);
+		print_status(philo, "has taken a fork");
 		pthread_mutex_lock(philo->left_chopstick);
+		print_status(philo, "has taken a fork");
 	}
 	else
 	{
 		pthread_mutex_lock(philo->left_chopstick);
+		print_status(philo, "has taken a fork");
 		pthread_mutex_lock(philo->right_chopstick);
+		print_status(philo, "has taken a fork");
 	}
 	print_status(philo, "is eating");
-	usleep(philo->vars->time_to_eat * 1000);
 	set_last_ate_time(philo);
+	usleep(philo->vars->time_to_eat * 1000);
+	pthread_mutex_lock(&philo->last_meal_mutex);
 	philo->num_eaten++;
+	pthread_mutex_unlock(&philo->last_meal_mutex);
 	pthread_mutex_unlock(philo->right_chopstick);
 	pthread_mutex_unlock(philo->left_chopstick);
 	return (SUCCESS);
@@ -269,6 +302,8 @@ int	essen(t_philospher *philo)
 
 int	schlafen(t_philospher *philo)
 {
+	if (simulation_ended(philo->vars))
+		return (1);
 	philo->current_state = SLEEPING;
 	print_status(philo, "is sleeping");
 	usleep(philo->vars->time_to_sleep * 1000);
@@ -277,6 +312,8 @@ int	schlafen(t_philospher *philo)
 
 int	denken(t_philospher *philo)
 {
+	if (simulation_ended(philo->vars))
+		return (1);
 	philo->current_state = THINKING;
 	print_status(philo, "is thinking");
 	return (SUCCESS);
@@ -322,6 +359,18 @@ int	start_simulation(t_vars *vars)
 	return (SUCCESS);
 }
 
+void	handle_single_philo(t_vars *vars)
+{
+	long	start;
+	long	timestamp;
+
+	start = get_current_time();
+	printf("%s0 %s1 %shas taken a fork%s\n", CYAN, BOLD, "", RESET);
+	usleep(vars->time_to_die * 1000);
+	timestamp = get_current_time() - start;
+	printf("%s%ld %s1 %shas died%s\n", CYAN, timestamp, BOLD, "", RESET);
+}
+
 int	main(int argc, char *argv[])
 {
 	t_vars	vars;
@@ -331,6 +380,8 @@ int	main(int argc, char *argv[])
 	{
 		if (validate_arguments(argc, argv, &vars))
 			return (FAILURE);
+		if (vars.num_philo == 1)
+			return (handle_single_philo(&vars), SUCCESS);
 		if (init_values(&vars))
 			return (free_resources(&vars), FAILURE);
 		if (start_simulation(&vars))
