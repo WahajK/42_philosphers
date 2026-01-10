@@ -1,6 +1,17 @@
 NAME = philo
 
-SRCS = src/main.c src/libft_utils.c
+SRCS = \
+	src/main.c \
+	src/libft_utils.c \
+	src/args.c \
+	src/time_utils.c \
+	src/init.c \
+	src/cleanup.c \
+	src/monitor.c \
+	src/status.c \
+	src/actions.c \
+	src/philo.c
+
 OBJS = $(SRCS:.c=.o)
 
 CC = cc

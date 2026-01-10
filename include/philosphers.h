@@ -112,4 +112,32 @@ long	get_current_time(void);
 void	ft_bzero(void *s, size_t n);
 void	*ft_calloc(size_t count, size_t size);
 void	print_status(t_philospher *philo, char *msg);
+int		ft_nan(char *num);
+void	parse_data(int argc, char *argv[], t_vars *vars);
+int		validate_arguments(int argc, char *argv[], t_vars *vars);
+
+void	free_philosophers(t_vars *vars);
+void	free_chopsticks(t_vars *vars);
+void	free_mutexes(t_vars *vars);
+void	free_resources(t_vars *vars);
+
+int		simulation_ended(t_vars *vars);
+void	safely_set_flags(t_vars *vars, int death_flag, int all_eaten);
+void	philosphers_janaza(t_vars *vars, int i);
+void	*monitor_routine(void *args);
+int		is_philo_dead(t_philospher *philo);
+int		check_all_eaten(t_philospher *philo);
+
+void	set_chopsticks(t_vars *vars);
+int		init_values(t_vars *vars);
+void	set_last_ate_time(t_philospher *philo);
+
+void	lock_chopsticks_ordered(t_philospher *philo);
+int		essen(t_philospher *philo);
+int		schlafen(t_philospher *philo);
+int		denken(t_philospher *philo);
+void	*philo_routine(void *args);
+
+int		start_simulation(t_vars *vars);
+void	handle_single_philo(t_vars *vars);
 #endif
